@@ -17,6 +17,10 @@ class BigQueryStoragePlugin(GcpPlugin):
     type: Literal["bigquery_storage"]
     page_size: Optional[int] = 100
     datasets_filter: Filter = Filter()
+    tables_filter: Optional[Filter] = None
+    max_datasets: Optional[int] = None
+    max_tables_per_dataset: Optional[int] = None
+    parallel_processing: bool = False
 
 
 class BigTablePlugin(GcpPlugin):
