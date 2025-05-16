@@ -1,32 +1,70 @@
-[tool.poetry]
+[build-system]
+requires = ["uv_build>=0.7.4,<0.8.0"]
+build-backend = "uv_build"
+
+
+[project]
+authors = [
+  { name = "Open Data Discovery", email = "pypi@opendatadiscovery.org>" },
+  { name = "Retize", email = "developers@retize.com.br" },
+]
 name = "odd-collector-gcp"
-version = "0.1.1"
+version = "0.2.0"
 description = "ODD Collector for GCP"
 license = "Apache-2.0"
-authors = ["Open Data Discovery <pypi@opendatadiscovery.org>"]
-homepage = "https://github.com/opendatadiscovery/odd-collector-gcp"
-repository = "https://github.com/opendatadiscovery/odd-collector-gcp"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "deltalake>=0.25.5",
+  "google-cloud-bigquery>=3.32.0",
+  "google-cloud-bigtable>=2.30.1",
+  "google-cloud-storage>=3.1.0",
+  "lark-parser>=0.12.0",
+  "odd-collector-sdk>=0.3.60",
+  "oddrn-generator>=0.1.103",
+  "pyarrow>=20.0.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-oddrn-generator = "^0.1.93"
-odd-collector-sdk = "^0.3.44"
-google-cloud-bigquery = "^3.1.0"
-google-cloud-storage = "^2.10.0"
-google-cloud-bigtable = "^2.19.0"
-pyarrow = "^10.0.1"
-lark-parser = "^0.12.0"
-deltalake = "^0.9.0"
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
-mypy = "^0.910"
-pytest = "^6.2.5"
-pre-commit = "^3.2.2"
+[tool.uv]
+dev-dependencies = [
+  "mypy>=1.15.0",
+  "pre-commit>=4.2.0",
+  "pytest>=8.3.5",
+  "ruff>=0.11.10",
+]
+
+
+[tool.uv.build-backend]
+module-root = "."
+
 
 [tool.mypy]
 ignore_missing_imports = true
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools]
+packages = ["odd_collector_gcp"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B"]
+ignore = []
+
+[tool.ruff]
+# Same as Black.
+line-length = 88
+indent-width = 4
+fixable = ["ALL"]
+target-version = "py312"
+
+# Allow imports relative to the "src" and "tests" directories.
+src = ["odd_collector_gcp", "tests"]
+
+[tool.ruff.format]
+# Use double quotes for strings.
+quote-style = "double"
+docstring-code-format = true
+
+# Indent with spaces, rather than tabs.
+indent-style = "space"
+
+docstring-code-line-length = "dynamic"

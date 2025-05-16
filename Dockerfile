@@ -1,36 +1,46 @@
-FROM python:3.9.16-slim-buster as base
-ENV POETRY_PATH=/etc/poetry \
-    POETRY_VERSION=1.3.2
-ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
+# Build stage: install dependencies and compile bytecode
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS build
 
-FROM base AS build
+# Set up workdir
+WORKDIR /app
 
-RUN apt-get update && \
-    apt-get install -y -q build-essential \
-    python3-dev  \
-    curl
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
 
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=${POETRY_PATH} python3 -
-RUN poetry config virtualenvs.create false
-RUN poetry config experimental.new-installer false
+# Copy from the cache instead of linking
+ENV UV_LINK_MODE=copy
 
-COPY poetry.lock pyproject.toml ./
-RUN poetry install --no-interaction --no-ansi --no-dev -vvv
+# Install the project's dependencies
+COPY pyproject.toml uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project --no-dev
 
+# Copy project source and install the application
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
 
-FROM base as runtime
+# Runtime stage: create a slimmer image for running the application
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS runtime
 
+# Create non-root user for security
 RUN useradd --create-home --shell /bin/bash app
 USER app
 
-# non-interactive env vars https://bugs.launchpad.net/ubuntu/+source/ansible/+bug/1833013
+# Non-interactive env vars
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN=true
 ENV UCF_FORCE_CONFOLD=1
 ENV PYTHONUNBUFFERED=1
 
+# Application directory
 WORKDIR /app
-COPY . ./
-COPY --from=build /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 
+# Copy application from build stage
+COPY --from=build --chown=app:app /app /app
+
+# Add virtual env to path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Run the ODD Collector application
 ENTRYPOINT ["bash", "start.sh"]

@@ -17,6 +17,12 @@ from google.cloud.bigquery import (
     RangePartitioning,
     TimePartitioning,
 )
+from odd_collector_gcp.adapters.bigquery_storage.dto import (
+    BigQueryDataset,
+    BigQueryField,
+    BigQueryTable,
+)
+from odd_collector_gcp.utils.get_properties import get_properties
 from odd_collector_sdk.utils.metadata import DefinitionType, extract_metadata
 from odd_models.models import (
     DataEntity,
@@ -28,13 +34,6 @@ from odd_models.models import (
     Type,
 )
 from oddrn_generator import BigQueryStorageGenerator
-
-from odd_collector_gcp.adapters.bigquery_storage.dto import (
-    BigQueryDataset,
-    BigQueryField,
-    BigQueryTable,
-)
-from odd_collector_gcp.utils.get_properties import get_properties
 
 BIG_QUERY_STORAGE_TYPE_MAPPING = {
     "STRING": Type.TYPE_STRING,
@@ -95,11 +94,10 @@ class BigQueryStorageMapper:
             field_mapper = FieldMapper(self.oddrn_generator, field)
             processed_ds_fields = field_mapper.dataset_fields
             field_list.extend(processed_ds_fields)
-        return DataEntity(
-            oddrn=self.oddrn_generator.get_oddrn_by_path("tables"),
-            name=table.table_id,
-            description=table.description,
-            metadata=[
+
+        # Extract metadata safely
+        try:
+            metadata = [
                 extract_metadata(
                     "bigquery",
                     table_dto,
@@ -108,7 +106,23 @@ class BigQueryStorageMapper:
                     jsonify=True,
                     json_encoder=BigQueryMetadataEncoder,
                 )
-            ],
+            ]
+        except Exception as e:
+            # Log the error but continue with empty metadata to prevent
+            # the entire process from failing
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Error extracting metadata for table {table.table_id}: {str(e)}"
+            )
+            metadata = []
+
+        return DataEntity(
+            oddrn=self.oddrn_generator.get_oddrn_by_path("tables"),
+            name=table.table_id,
+            description=table.description,
+            metadata=metadata,
             created_at=table.created,
             updated_at=table.modified,
             type=DataEntityType.TABLE,
@@ -188,6 +202,8 @@ class BigQueryMetadataEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
+
+        # Handle known BigQuery objects
         if isinstance(
             obj,
             (
@@ -206,4 +222,33 @@ class BigQueryMetadataEncoder(json.JSONEncoder):
             ),
         ):
             return get_properties(obj)
+
+        # Handle MetadataExtension from odd_collector_sdk
+        if obj.__class__.__name__ == "MetadataExtension":
+            try:
+                # Convert MetadataExtension to dictionary
+                return {
+                    "schema_url": getattr(obj, "schema_url", None),
+                    "metadata": getattr(obj, "metadata", {}),
+                }
+            except Exception:
+                return {"type": "MetadataExtension", "error": "Could not serialize"}
+
+        # Handle any BigQuery object that's not explicitly listed
+        if hasattr(obj, "__module__") and "google.cloud.bigquery" in str(
+            obj.__module__
+        ):
+            try:
+                return get_properties(obj)
+            except Exception:
+                # Fallback: create a dictionary with basic object information
+                try:
+                    return {
+                        "_type": obj.__class__.__name__,
+                        "string_representation": str(obj),
+                    }
+                except Exception:
+                    # Last resort - just return the type name
+                    return f"{obj.__class__.__name__} (not serializable)"
+
         return super().default(obj)

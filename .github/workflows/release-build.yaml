@@ -21,7 +21,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.ORG_TOKEN_GHCR }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -45,19 +45,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          poetry-version: 1.3.2
-          virtualenvs-create: false
+          python-version: '3.12'
 
       - name: Patch package version
         run: |
-          poetry version patch
-          echo "VERSION = \"$(poetry version -s)\"" > odd_collector_gcp/__version__.py
+          # Extract current version from pyproject.toml
+          CURRENT_VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Split version into major.minor.patch
+          IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+          
+          # Increment patch version
+          new_patch=$((patch + 1))
+          NEW_VERSION="$major.$minor.$new_patch"
+          echo "New version: $NEW_VERSION"
+          
+          # Update version in pyproject.toml
+          python -c "
+          import tomli, tomli_w
+          data = tomli.load(open('pyproject.toml', 'rb'))
+          data['project']['version'] = '$NEW_VERSION'
+          tomli_w.dump(data, open('pyproject.toml', 'wb'))
+          "
+          
+          # Update __version__.py file
+          echo "VERSION = \"$NEW_VERSION\"" > odd_collector_gcp/__version__.py
 
-
-      - name: Update repository with up-to-date and version
+      - name: Update repository with up-to-date version
         run: |
           git config --global user.email "opendatadiscovery-bot@provectus.com"
           git config --global user.name "OpenDataDiscovery Bot"

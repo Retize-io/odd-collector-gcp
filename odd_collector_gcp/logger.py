@@ -1,1 +1,1 @@
-from odd_collector_sdk.logger import logger
+from odd_collector_sdk.logger import logger  # noqa: F401

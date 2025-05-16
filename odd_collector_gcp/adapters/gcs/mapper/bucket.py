@@ -1,9 +1,8 @@
 from collections import deque
 
+from odd_collector_gcp.adapters.gcs.domain.models import Bucket, File, Folder
 from odd_models import DataEntity, DataEntityGroup, DataEntityType, DataSet
 from oddrn_generator import GCSGenerator
-
-from odd_collector_gcp.adapters.gcs.domain.models import Bucket, File, Folder
 
 from .column import map_columns
 
@@ -12,7 +11,7 @@ def map_file(file: File, generator: GCSGenerator) -> DataEntity:
     bucket, *keys = file.path.split("/")
     generator.set_oddrn_paths(keys="/".join(keys))
 
-    SCHEMA_FILE_URL = (
+    SCHEMA_FILE_URL = (  # noqa: N806
         "https://raw.githubusercontent.com/opendatadiscovery/opendatadiscovery-specification/"
         "main/specification/extensions/gcs.json"
     )

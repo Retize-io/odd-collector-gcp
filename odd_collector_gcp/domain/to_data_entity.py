@@ -8,5 +8,4 @@ class ToDataEntity(Protocol):
     Interface for models which can be mapped to DataEntity
     """
 
-    def to_data_entity(self, *args, **kwargs) -> DataEntity:
-        ...
+    def to_data_entity(self, *args, **kwargs) -> DataEntity: ...
