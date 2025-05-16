@@ -7,10 +7,9 @@ from google.cloud.bigquery import (
     TimePartitioning,
     TimePartitioningType,
 )
+from odd_collector_gcp.adapters.bigquery_storage.mapper import BigQueryMetadataEncoder
 from odd_collector_sdk.utils.metadata import DefinitionType, extract_metadata
 from pydantic import BaseModel
-
-from odd_collector_gcp.adapters.bigquery_storage.mapper import BigQueryMetadataEncoder
 
 
 @pytest.fixture
@@ -55,7 +54,7 @@ FLATTEN = {
     "nested_meta.nested_field_four.more_nested_field_two": {},
     "nested_meta.nested_field_four.more_nested_field_three": "string",
     "nested_meta.nested_field_four.more_nested_field_external": external_config,
-    "nested_meta.nested_field_four.more_nested_field_time_partitioning": time_partitioning,
+    "nested_meta.nested_field_four.more_nested_field_time_partitioning": time_partitioning,  # noqa: E501
     "nested_meta.nested_field_five": {},
     "nested_field_external": external_config,
     "nested_field_time_partitioning": time_partitioning,

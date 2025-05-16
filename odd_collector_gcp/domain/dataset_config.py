@@ -6,7 +6,8 @@ from pydantic import BaseModel
 class FolderAsDataset(BaseModel):
     """
     Configuration for folder as dataset.
-    If folder is a dataset, then all files in the folder will be treated as a single dataset.
+    If folder is a dataset, then all files in the folder
+    will be treated as a single dataset.
     """
 
     file_format: str

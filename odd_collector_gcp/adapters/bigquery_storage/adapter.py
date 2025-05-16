@@ -2,13 +2,12 @@ import concurrent.futures
 import logging
 
 from google.cloud import bigquery
-from odd_collector_sdk.domain.adapter import BaseAdapter
-from odd_models.models import DataEntityList
-from oddrn_generator.generators import BigQueryStorageGenerator
-
 from odd_collector_gcp.adapters.bigquery_storage.dto import BigQueryDataset
 from odd_collector_gcp.adapters.bigquery_storage.mapper import BigQueryStorageMapper
 from odd_collector_gcp.domain.plugin import BigQueryStoragePlugin
+from odd_collector_sdk.domain.adapter import BaseAdapter
+from odd_models.models import DataEntityList
+from oddrn_generator.generators import BigQueryStorageGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +40,10 @@ class Adapter(BaseAdapter):
         logger.info("Mapping datasets to data entities...")
         entities = self.mapper.map_datasets(datasets)
 
-        elapsed_time = __import__("time").time() - start_time
+        __import__("time").time() - start_time
         logger.info(
-            f"Completed fetching and mapping {len(entities)} entities in {elapsed_time:.2f} seconds"
+            f"Completed fetching and mapping {len(entities)}"
+            " entities in {elapsed_time:.2f} seconds"
         )
 
         return DataEntityList(
@@ -80,7 +80,8 @@ class Adapter(BaseAdapter):
             # Calculate optimal number of workers based on dataset count
             max_workers = min(len(filtered_datasets), 10)  # Limit to 10 workers max
             logger.info(
-                f"Processing {len(filtered_datasets)} datasets in parallel with {max_workers} workers"
+                f"Processing {len(filtered_datasets)} datasets in parallel"
+                " with {max_workers} workers"
             )
 
             with concurrent.futures.ThreadPoolExecutor(
@@ -144,7 +145,8 @@ class Adapter(BaseAdapter):
                         table_count += 1
                         if table_limit and table_count >= table_limit:
                             logger.debug(
-                                f"Reached table limit ({table_limit}) for dataset {dataset_ref.dataset_id}"
+                                f"Reached table limit ({table_limit})"
+                                " for dataset {dataset_ref.dataset_id}"
                             )
                             break
                     except Exception as e:

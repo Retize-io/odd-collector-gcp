@@ -2,13 +2,12 @@ from typing import Any
 
 from funcy import lflatten
 from lark import Lark
-from odd_models.models import DataSetField, DataSetFieldType, Type
-from oddrn_generator import GCSGenerator
-from pyarrow import Schema
-
 from odd_collector_gcp.adapters.gcs.mapper.gcs_field_type_transformer import (
     field_type_transformer,
 )
+from odd_models.models import DataSetField, DataSetFieldType, Type
+from oddrn_generator import GCSGenerator
+from pyarrow import Schema
 
 from ..logger import logger
 
@@ -96,9 +95,7 @@ def map_column(
         ),
         parent_field_oddrn=parent_oddrn,
         type=DataSetFieldType(
-            type=TYPE_MAP.get(
-                ds_type, Type.TYPE_UNKNOWN
-            ),  # TYPE_MAP.get(str(field.type), TYPE_MAP.get(type(field.type), Type.TYPE_UNKNOWN)),
+            type=TYPE_MAP.get(ds_type, Type.TYPE_UNKNOWN),
             logical_type=logical_type,
             is_nullable=True,
         ),

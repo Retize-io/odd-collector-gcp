@@ -5,7 +5,7 @@ class EmptyFolderError(Exception):
         super().__init__(self.message.format(path))
 
 
-class InvalidFileFormatWarning(Exception):
+class InvalidFileFormatWarning(Exception):  # noqa: N818
     pass
 
 

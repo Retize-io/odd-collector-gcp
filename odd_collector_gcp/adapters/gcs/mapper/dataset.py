@@ -1,5 +1,6 @@
 import re
 from typing import Any, Dict
+
 from funcy import lflatten
 from lark import Lark
 from odd_models.models import (
@@ -13,9 +14,8 @@ from oddrn_generator.generators import GCSGenerator
 from oddrn_generator.utils import escape
 from pyarrow import Schema
 
-from .column import map_column
 from ..logger import logger
-
+from .column import map_column
 from .gcs_field_type_transformer import GCSFieldTypeTransformer
 
 SCHEMA_FILE_URL = (
@@ -83,7 +83,7 @@ def gcs_path_to_name(path: str) -> str:
     Remove the bucket name from the path and return the name of the file.
     """
 
-    return escape(re.sub("^[a-zA-z-.\d]*\/", "", path.strip("/"), 1))
+    return escape(re.sub(r"^[a-zA-z-.\d]*\/", "", path.strip("/"), 1))  # noqa: B034
 
 
 def map_dataset(
@@ -106,7 +106,8 @@ def map_dataset(
         name=name,
         oddrn=oddrn_gen.get_oddrn_by_path("keys", name),
         metadata=metadata,
-        # TODO for updated_at and Created_at we need first and last files mod date from GCS, arrow file info shows only size
+        # TODO for updated_at and Created_at we need first and last files
+        # mod date from GCS, arrow file info shows only size
         updated_at=None,
         created_at=None,
         type=DataEntityType.FILE,
