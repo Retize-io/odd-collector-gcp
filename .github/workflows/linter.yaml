@@ -10,8 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: psf/black@stable
+      - uses: astral-sh/ruff-action@v3
         with:
-          options: "--check --verbose"
           src: "./odd_collector_gcp"
-          version: "22.3.0"
+          args: "format --check --diff"
+      - uses: astral-sh/ruff-action@v3
+        with:
+          src: "./odd_collector_gcp"
+          args: "check"
