@@ -11,6 +11,10 @@ env:
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
+    permissions:
+        contents: write
+        packages: write
+        id-token: write
 
     steps:
       - name: Checkout repository
@@ -53,7 +57,7 @@ jobs:
       - name: Patch package version
         run: |
           # Extract current version from pyproject.toml
-          CURRENT_VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          CURRENT_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
           echo "Current version: $CURRENT_VERSION"
           
           # Split version into major.minor.patch
@@ -66,8 +70,8 @@ jobs:
           
           # Update version in pyproject.toml
           python -c "
-          import tomli, tomli_w
-          data = tomli.load(open('pyproject.toml', 'rb'))
+          import tomllib, tomli_w
+          data = tomllib.load(open('pyproject.toml', 'rb'))
           data['project']['version'] = '$NEW_VERSION'
           tomli_w.dump(data, open('pyproject.toml', 'wb'))
           "
